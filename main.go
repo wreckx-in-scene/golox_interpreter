@@ -3,7 +3,11 @@ package main
 import "fmt"
 
 func main() {
-	source := "var x = 5 + 3;"
+	source := `var x = 42;
+	var name = "Amogh";
+	if (x > 10) {
+		print name;
+	}`
 
 	lexer := &Lexer{
 		source:  source,
