@@ -3,11 +3,7 @@ package main
 import "fmt"
 
 func main() {
-	source := `var x = 42;
-	var name = "Amogh";
-	if (x > 10) {
-		print name;
-	}`
+	source := "2 + 3 * 4 == 14"
 
 	lexer := &Lexer{
 		source:  source,
@@ -18,8 +14,8 @@ func main() {
 	}
 
 	tokens := lexer.ScanToken()
+	parser := NewParser(tokens)
+	ast := parser.Parse()
 
-	for _, token := range tokens {
-		fmt.Println(token.Type, token.Lexeme)
-	}
+	fmt.Println(ast)
 }
