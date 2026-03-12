@@ -3,6 +3,9 @@ package main
 //creating ast structs
 type Expr interface{}
 
+//base interface for statements
+type Stmt interface{}
+
 type Binary struct {
 	Left     Expr
 	Operator Token
@@ -19,5 +22,23 @@ type Literal struct {
 }
 
 type Grouping struct {
+	Expression Expr
+}
+
+//adding stmt nodes
+
+//print statement
+type PrintStmt struct {
+	Expression Expr
+}
+
+//var statement
+type VarStmt struct {
+	Name        Token
+	Initializer Expr
+}
+
+// expression used as a statement
+type ExprStmt struct {
 	Expression Expr
 }

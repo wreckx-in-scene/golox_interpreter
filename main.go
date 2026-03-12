@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func main() {
-	source := "2 + 3 * 4"
+	source := "(2 + 3) * 4"
 
 	lexer := &Lexer{
 		source:  source,
