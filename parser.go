@@ -76,6 +76,10 @@ func (p *Parser) primary() Expr {
 		return Grouping{Expression: expr}
 	}
 
+	if p.match(IDENTIFIER) {
+		return Identifier{Name: p.tokens[p.current-1]}
+	}
+
 	return nil
 }
 
@@ -144,6 +148,46 @@ func (p *Parser) expression() Expr {
 }
 
 // parse function
-func (p *Parser) Parse() Expr {
-	return p.expression()
+func (p *Parser) Parse() []Stmt {
+	var statements []Stmt
+	for !p.isAtEnd() {
+		statements = append(statements, p.statement())
+	}
+
+	return statements
+}
+
+func (p *Parser) statement() Stmt {
+	if p.match(PRINT) {
+		return p.printStatement()
+	}
+
+	if p.match(VAR) {
+		return p.varStatement()
+	}
+
+	return p.expressionStatement()
+}
+
+func (p *Parser) printStatement() Stmt {
+	value := p.expression()
+	p.match(SEMICOLON)
+	return PrintStmt{Expression: value}
+}
+
+func (p *Parser) varStatement() Stmt {
+	name := p.advance()
+	var initializer Expr
+	if p.match(EQUAL) {
+		initializer = p.expression()
+	}
+
+	p.match(SEMICOLON)
+	return VarStmt{Name: name, Initializer: initializer}
+}
+
+func (p *Parser) expressionStatement() Stmt {
+	expr := p.expression()
+	p.match(SEMICOLON)
+	return ExprStmt{Expression: expr}
 }

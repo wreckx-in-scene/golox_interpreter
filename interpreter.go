@@ -2,6 +2,8 @@ package main
 
 import "fmt"
 
+var env = NewEnvironment()
+
 func evaluate(expr Expr) interface{} {
 	switch e := expr.(type) {
 
@@ -53,6 +55,9 @@ func evaluate(expr Expr) interface{} {
 		case BANG_EQUAL:
 			return left != right
 		}
+
+	case Identifier:
+		return env.get(e.Name.Lexeme)
 	}
 
 	return nil
@@ -68,4 +73,23 @@ func isTruthy(val interface{}) bool {
 	}
 
 	return true
+}
+
+//execution statement
+func execute(stmt Stmt) {
+	switch s := stmt.(type) {
+	case PrintStmt:
+		value := evaluate(s.Expression)
+		fmt.Println(value)
+
+	case VarStmt:
+		var value interface{}
+		if s.Initializer != nil {
+			value = evaluate(s.Initializer)
+		}
+		env.define(s.Name.Lexeme, value)
+
+	case ExprStmt:
+		evaluate(s.Expression)
+	}
 }

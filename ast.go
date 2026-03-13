@@ -42,3 +42,8 @@ type VarStmt struct {
 type ExprStmt struct {
 	Expression Expr
 }
+
+//identifier node
+type Identifier struct {
+	Name Token
+}

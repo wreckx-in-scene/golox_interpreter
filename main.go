@@ -1,9 +1,10 @@
 package main
 
-import "fmt"
-
 func main() {
-	source := "(2 + 3) * 4"
+	source := `var name = "Tamaghna";
+var age = 20;
+print name;
+print age + 5;`
 
 	lexer := &Lexer{
 		source:  source,
@@ -15,8 +16,9 @@ func main() {
 
 	tokens := lexer.ScanToken()
 	parser := NewParser(tokens)
-	ast := parser.Parse()
+	statements := parser.Parse()
 
-	result := evaluate(ast)
-	fmt.Println(result)
+	for _, stmt := range statements {
+		execute(stmt)
+	}
 }
