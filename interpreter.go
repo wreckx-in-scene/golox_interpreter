@@ -26,16 +26,12 @@ func evaluate(expr Expr) interface{} {
 
 		switch e.Operator.Type {
 		case PLUS:
-			//could be numbers or strings
 			l, lok := left.(float64)
 			r, rok := right.(float64)
-
 			if lok && rok {
 				return l + r
 			}
-
-			return fmt.Sprintf("%v%v , left , right")
-
+			return fmt.Sprintf("%v%v", left, right)
 		case MINUS:
 			return left.(float64) - right.(float64)
 		case STAR:
@@ -58,6 +54,12 @@ func evaluate(expr Expr) interface{} {
 
 	case Identifier:
 		return env.get(e.Name.Lexeme)
+
+	// FIX: Add AssignStmt to evaluate so nested assignments and ExprStmts work
+	case AssignStmt:
+		value := evaluate(e.Value)
+		env.assign(e.Name.Lexeme, value)
+		return value
 	}
 
 	return nil
@@ -91,5 +93,29 @@ func execute(stmt Stmt) {
 
 	case ExprStmt:
 		evaluate(s.Expression)
+
+	// FIX: Use env.assign to update the value, not redefine it
+	case AssignStmt:
+		value := evaluate(s.Value)
+		env.assign(s.Name.Lexeme, value)
+
+	case BlockStmt:
+		for _, stmt := range s.Statements {
+			execute(stmt)
+		}
+
+	case IfStmt:
+		condition := evaluate(s.Condition)
+		if isTruthy(condition) {
+			execute(s.ThenBranch)
+		} else if s.ElseBranch != nil {
+			execute(s.ElseBranch)
+		}
+
+	case WhileStmt:
+		for isTruthy(evaluate(s.Condition)) {
+			execute(s.Body)
+		}
 	}
+
 }

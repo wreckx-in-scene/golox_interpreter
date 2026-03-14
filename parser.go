@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type Parser struct {
 	tokens  []Token
 	current int
@@ -144,28 +146,52 @@ func (p *Parser) equality() Expr {
 }
 
 func (p *Parser) expression() Expr {
-	return p.equality()
+	return p.assignment()
+}
+
+func (p *Parser) assignment() Expr {
+	expr := p.equality()
+
+	if p.match(EQUAL) {
+		equals := p.tokens[p.current-1]
+		value := p.assignment()
+
+		if name, ok := expr.(Identifier); ok {
+			return AssignStmt{Name: name.Name, Value: value}
+		}
+
+		fmt.Println("Error : Inavlid assignment target on line", equals.Line)
+	}
+
+	return expr
 }
 
 // parse function
 func (p *Parser) Parse() []Stmt {
 	var statements []Stmt
 	for !p.isAtEnd() {
-		statements = append(statements, p.statement())
+		stmt := p.statement()
+		statements = append(statements, stmt)
 	}
-
 	return statements
 }
-
 func (p *Parser) statement() Stmt {
+
+	if p.match(IF) {
+		return p.ifStatement()
+	}
+	if p.match(WHILE) {
+		return p.whileStatement()
+	}
+	if p.match(LEFT_BRACE) {
+		return p.blockStatement()
+	}
 	if p.match(PRINT) {
 		return p.printStatement()
 	}
-
 	if p.match(VAR) {
 		return p.varStatement()
 	}
-
 	return p.expressionStatement()
 }
 
@@ -190,4 +216,39 @@ func (p *Parser) expressionStatement() Stmt {
 	expr := p.expression()
 	p.match(SEMICOLON)
 	return ExprStmt{Expression: expr}
+}
+
+func (p *Parser) blockStatement() Stmt {
+	var statements []Stmt
+	for !p.check(RIGHT_BRACE) && !p.isAtEnd() {
+		statements = append(statements, p.statement())
+	}
+	p.match(RIGHT_BRACE)
+	return BlockStmt{Statements: statements}
+}
+
+func (p *Parser) ifStatement() Stmt {
+	p.match(LEFT_PAREN)
+	condition := p.expression()
+	p.match(RIGHT_PAREN)
+
+	thenBranch := p.statement()
+	var elseBranch Stmt
+	if p.match(ELSE) {
+		elseBranch = p.statement()
+	}
+
+	return IfStmt{
+		Condition:  condition,
+		ThenBranch: thenBranch,
+		ElseBranch: elseBranch,
+	}
+}
+
+func (p *Parser) whileStatement() Stmt {
+	p.match(LEFT_PAREN)
+	condition := p.expression()
+	p.match(RIGHT_PAREN)
+	body := p.statement()
+	return WhileStmt{Condition: condition, Body: body}
 }

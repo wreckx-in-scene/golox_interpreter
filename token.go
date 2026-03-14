@@ -47,7 +47,7 @@ const (
 	THIS   TokenType = "THIS"
 	TRUE   TokenType = "TRUE"
 	VAR    TokenType = "VAR"
-	WHILE  TokenType = "VAR"
+	WHILE  TokenType = "WHILE"
 
 	//special
 	EOF TokenType = "EOF"

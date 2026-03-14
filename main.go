@@ -1,10 +1,25 @@
 package main
 
 func main() {
-	source := `var name = "Tamaghna";
-var age = 20;
-print name;
-print age + 5;`
+	source := `
+var a = 0;
+var b = 1;
+var n = 6; // Calculate 6th Fibonacci number roughly
+
+while (n > 0) {
+    print a;
+    var temp = a;
+    a = b;
+    b = temp + b;
+    n = n - 1;
+}
+
+if (a == 8) {
+    print "Fibonacci logic: Success";
+} else {
+    print "Fibonacci logic: Failed";
+}
+`
 
 	lexer := &Lexer{
 		source:  source,
@@ -15,6 +30,7 @@ print age + 5;`
 	}
 
 	tokens := lexer.ScanToken()
+
 	parser := NewParser(tokens)
 	statements := parser.Parse()
 

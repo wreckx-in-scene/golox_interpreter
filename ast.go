@@ -47,3 +47,25 @@ type ExprStmt struct {
 type Identifier struct {
 	Name Token
 }
+
+//if statement
+type IfStmt struct {
+	Condition  Expr
+	ThenBranch Stmt
+	ElseBranch Stmt
+}
+
+//while statement
+type WhileStmt struct {
+	Condition Expr
+	Body      Stmt
+}
+
+type BlockStmt struct {
+	Statements []Stmt
+}
+
+type AssignStmt struct {
+	Name  Token
+	Value Expr
+}
