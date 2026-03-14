@@ -79,10 +79,112 @@ func (p *Parser) primary() Expr {
 	}
 
 	if p.match(IDENTIFIER) {
-		return Identifier{Name: p.tokens[p.current-1]}
+		expr := Identifier{Name: p.tokens[p.current-1]}
+		//check if its a function call
+		if p.match(LEFT_PAREN) {
+			return p.finishCall(expr)
+		}
+		return expr
 	}
 
 	return nil
+}
+
+//finish call function
+func (p *Parser) finishCall(callee Expr) Expr {
+	var args []Expr
+	if !p.check(RIGHT_PAREN) {
+		for {
+			args = append(args, p.expression())
+			if !p.match(COMMA) {
+				break
+			}
+		}
+	}
+
+	p.match(RIGHT_PAREN)
+	return CallExpr{Callee: callee, Arguments: args}
+}
+
+func (p *Parser) functionStatement() Stmt {
+	name := p.advance()
+	p.match(LEFT_PAREN)
+
+	var params []Token
+	if !p.check(RIGHT_PAREN) {
+		for {
+			params = append(params, p.advance())
+			if !p.match(COMMA) {
+				break
+			}
+		}
+	}
+	p.match(RIGHT_PAREN)
+	p.match(LEFT_BRACE)
+	body := p.blockStatement()
+
+	return FunctionStmt{Name: name, Params: params, Body: body.(BlockStmt).Statements}
+}
+
+func (p *Parser) returnStatement() Stmt {
+	var value Expr
+	if !p.check(SEMICOLON) {
+		value = p.expression()
+	}
+	p.match(SEMICOLON)
+	return ReturnStmt{Value: value}
+}
+
+func (p *Parser) forStatement() Stmt {
+	p.match(LEFT_PAREN)
+
+	// initializer
+	var initializer Stmt
+	if p.match(SEMICOLON) {
+		initializer = nil
+	} else if p.match(VAR) {
+		initializer = p.varStatement()
+	} else {
+		initializer = p.expressionStatement()
+	}
+
+	// condition
+	var condition Expr
+	if !p.check(SEMICOLON) {
+		condition = p.expression()
+	}
+	p.match(SEMICOLON)
+
+	// increment
+	var increment Expr
+	if !p.check(RIGHT_PAREN) {
+		increment = p.expression()
+	}
+	p.match(RIGHT_PAREN)
+
+	// body
+	body := p.statement()
+
+	// add increment to end of body
+	if increment != nil {
+		body = BlockStmt{Statements: []Stmt{
+			body,
+			ExprStmt{Expression: increment},
+		}}
+	}
+
+	// wrap in while
+	if condition == nil {
+		condition = Literal{Value: true}
+	}
+	body = WhileStmt{Condition: condition, Body: body}
+
+	// add initializer before while
+	if initializer != nil {
+		body = BlockStmt{Statements: []Stmt{initializer, body}}
+	}
+
+	return body
 }
 
 // unary function
@@ -191,6 +293,15 @@ func (p *Parser) statement() Stmt {
 	}
 	if p.match(VAR) {
 		return p.varStatement()
+	}
+	if p.match(FUN) {
+		return p.functionStatement()
+	}
+	if p.match(RETURN) {
+		return p.returnStatement()
+	}
+	if p.match(FOR) {
+		return p.forStatement()
 	}
 	return p.expressionStatement()
 }

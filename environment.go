@@ -3,7 +3,8 @@ package main
 import "fmt"
 
 type Environment struct {
-	values map[string]interface{}
+	values    map[string]interface{}
+	enclosing *Environment
 }
 
 func NewEnvironment() *Environment {
@@ -22,14 +23,21 @@ func (e *Environment) assign(name string, value interface{}) {
 		e.values[name] = value
 		return
 	}
+	if e.enclosing != nil {
+		e.enclosing.assign(name, value)
+		return
+	}
 	fmt.Println("Undefined variable for assignment:", name)
 }
-
 func (e *Environment) get(name string) interface{} {
 	value, exists := e.values[name]
-	if !exists {
-		fmt.Println("Undefined variable:", name)
-		return nil
+	if exists {
+		return value
 	}
-	return value
+	if e.enclosing != nil {
+		return e.enclosing.get(name)
+	}
+
+	fmt.Println("Undefined variable: ", name)
+	return nil
 }

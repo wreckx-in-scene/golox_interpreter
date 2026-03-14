@@ -1,0 +1,35 @@
+// fibonacci sequence
+fun fibonacci(n) {
+    if (n <= 1) { return n; }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// print first 10 fibonacci numbers
+for (var i = 0; i < 10; i = i + 1) {
+    print fibonacci(i);
+}
+
+// string operations
+var name = "golox";
+print "Welcome to " + name + "!";
+
+// basic math
+var x = 100;
+var y = 37;
+print x - y;
+print x * y;
+
+// conditionals
+if (x > y) {
+    print "x is greater";
+} else {
+    print "y is greater";
+}
+
+// while loop
+var count = 3;
+while (count > 0) {
+    print count;
+    count = count - 1;
+}
+print "done!";

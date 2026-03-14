@@ -4,6 +4,43 @@ import "fmt"
 
 var env = NewEnvironment()
 
+//return value wrapper
+type ReturnValue struct {
+	Value interface{}
+}
+
+//lox function
+type LoxFunction struct {
+	Declaration FunctionStmt
+}
+
+func (f LoxFunction) call(args []interface{}) (result interface{}) {
+	funcEnv := NewEnvironment()
+	funcEnv.enclosing = env
+
+	for i, param := range f.Declaration.Params {
+		funcEnv.define(param.Lexeme, args[i])
+	}
+
+	previous := env
+	env = funcEnv
+
+	defer func() {
+		env = previous
+		if r := recover(); r != nil {
+			if ret, ok := r.(ReturnValue); ok {
+				result = ret.Value
+			}
+		}
+	}()
+
+	for _, stmt := range f.Declaration.Body {
+		execute(stmt)
+	}
+
+	return nil
+}
+
 func evaluate(expr Expr) interface{} {
 	switch e := expr.(type) {
 
@@ -60,6 +97,18 @@ func evaluate(expr Expr) interface{} {
 		value := evaluate(e.Value)
 		env.assign(e.Name.Lexeme, value)
 		return value
+
+	case CallExpr:
+		callee := evaluate(e.Callee)
+		var args []interface{}
+		for _, arg := range e.Arguments {
+			args = append(args, evaluate(arg))
+		}
+		if fn, ok := callee.(LoxFunction); ok {
+			return fn.call(args)
+		}
+		fmt.Println("Not a function")
+
 	}
 
 	return nil
@@ -116,6 +165,16 @@ func execute(stmt Stmt) {
 		for isTruthy(evaluate(s.Condition)) {
 			execute(s.Body)
 		}
+	case FunctionStmt:
+		function := LoxFunction{Declaration: s}
+		env.define(s.Name.Lexeme, function)
+
+	case ReturnStmt:
+		var value interface{}
+		if s.Value != nil {
+			value = evaluate(s.Value)
+		}
+		panic(ReturnValue{Value: value})
 	}
 
 }

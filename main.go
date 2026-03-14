@@ -1,26 +1,13 @@
 package main
 
-func main() {
-	source := `
-var a = 0;
-var b = 1;
-var n = 6; // Calculate 6th Fibonacci number roughly
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strings"
+)
 
-while (n > 0) {
-    print a;
-    var temp = a;
-    a = b;
-    b = temp + b;
-    n = n - 1;
-}
-
-if (a == 8) {
-    print "Fibonacci logic: Success";
-} else {
-    print "Fibonacci logic: Failed";
-}
-`
-
+func run(source string) {
 	lexer := &Lexer{
 		source:  source,
 		tokens:  []Token{},
@@ -30,11 +17,53 @@ if (a == 8) {
 	}
 
 	tokens := lexer.ScanToken()
-
 	parser := NewParser(tokens)
 	statements := parser.Parse()
 
 	for _, stmt := range statements {
 		execute(stmt)
+	}
+}
+
+func runFile(path string) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Println("Error reading file: err")
+		os.Exit(1)
+	}
+
+	run(string(data))
+}
+
+func runREPL() {
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Println("golox REPL - type 'exit' to quit")
+	for {
+		fmt.Print(">")
+		if !scanner.Scan() {
+			break
+		}
+		line := strings.TrimSpace(scanner.Text())
+		if line == "exit" {
+			break
+		}
+		if line == "" {
+			continue
+		}
+
+		run(line)
+	}
+}
+
+func main() {
+	args := os.Args[1:]
+
+	if len(args) == 0 {
+		runREPL()
+	} else if len(args) == 1 {
+		runFile(args[0])
+	} else {
+		fmt.Println("Usage: golox [script.lox]")
+		os.Exit(1)
 	}
 }

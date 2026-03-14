@@ -69,3 +69,18 @@ type AssignStmt struct {
 	Name  Token
 	Value Expr
 }
+
+type FunctionStmt struct {
+	Name   Token
+	Params []Token
+	Body   []Stmt
+}
+
+type ReturnStmt struct {
+	Value Expr
+}
+
+type CallExpr struct {
+	Callee    Expr
+	Arguments []Expr
+}
